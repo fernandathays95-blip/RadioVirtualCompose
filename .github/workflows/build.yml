@@ -1,0 +1,35 @@
+name: Build Signed APK
+
+on:
+  push:
+    branches: [ main ]   # O workflow roda quando você faz push no branch main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Passo 1: baixar o código do repositório
+      - uses: actions/checkout@v3
+
+      # Passo 2: instalar Java
+      - name: Instalar Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Passo 3: restaurar o keystore do Secret
+      - name: Restaurar keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+      # Passo 4: build do APK assinado
+      - name: Build APK assinado
+        run: ./gradlew assembleRelease
+
+      # Passo 5: subir o APK gerado como artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/app-release.apk
